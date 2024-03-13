@@ -1,0 +1,33 @@
+#include&lt;stdio.h&gt;
+#include&lt;stdlib.h&gt;
+#include&lt;pthread.h&gt;
+#include&lt;semaphore.h&gt;
+int count=0,rcount=0;
+sem_t mutex,wr;
+void* writer(void *p){
+int* i =(int*)p;
+sem_wait(&amp;wr);
+printf(&quot;\nWriter %d writes page number %d&quot;,*i,++count);
+sem_post(&amp;wr);
+}
+void* reader(void* p){
+int* i =(int*)p;
+sem_wait(&amp;mutex);
+rcount++;
+if(rcount==1)
+sem_wait(&amp;wr);
+sem_post(&amp;mutex);
+printf(&quot;\nReader %d reads page number %d &quot;,*i,count);
+sem_wait(&amp;mutex);
+rcount--;
+if(rcount==0)
+sem_post(&amp;wr);
+sem_post(&amp;mutex);
+}
+int main(){
+sem_init(&amp;mutex,0,1);
+sem_init(&amp;wr,0,1); int a[6]={1,2,3,1,2,3};
+pthread_t p[6];
+for(int i=0;i&lt;3;i++) pthread_create(&amp;p[i],NULL,writer,&amp;a[i]);
+for(int i=3;i&lt;6;i++) pthread_create(&amp;p[i],NULL,reader,&amp;a[i]);
+for(int i=0;i&lt;6;i++)
